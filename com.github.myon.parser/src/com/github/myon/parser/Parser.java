@@ -44,7 +44,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @param supplier of the output
 	 * @return an elementary {@link Parser} with supplied output that does not consume any input. 
 	 */
-	public static <I,O> @NonNull Parser<I,O> succeed(final @NonNull Supplier<? extends O> supplier) {
+	public static <I,O> @NonNull Parser<I,O> succeed(
+			final @NonNull Supplier<? extends O> supplier
+	) {
 		return word -> Stream.of(Tuple.of(supplier.get(), word));
 	}
 
@@ -53,7 +55,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @return an elementary {@code Parser} that consumes the first input symbol and and returns it as output, 
 	 * if and only if a {@link Predicate} is satisfied. Empty result otherwise.
 	 */
-	public static <IO> @NonNull Parser<IO,IO> satisfy(final @NonNull Predicate<? super IO> predicate) {
+	public static <IO> @NonNull Parser<IO,IO> satisfy(
+		final @NonNull Predicate<? super IO> predicate
+	) {
 		return word ->
 		!word.isEmpty() && predicate.test(word.get(0)) ?
 				Stream.of(Tuple.of(word.get(0), word.subList(1, word.size())))
@@ -67,7 +71,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @see #alternative(Parser) for different output types
 	 * @see #choice(Parser...) for multiple {@link Parser}s
 	 */
-	public default @NonNull Parser<I,O> choice(final @NonNull Parser<I,O> that) {
+	public default @NonNull Parser<I,O> choice(
+		final @NonNull Parser<I,O> that
+	) {
 		return word -> Stream.concat(this.apply(word), that.apply(word));
 	}
 
@@ -77,7 +83,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @return a {@link Parser} that unites the output of given {@link Parser}s
 	 * @see #choice(Parser) for same output types
 	 */
-	public default <T> @NonNull Parser<I,Either<O,T>> alternative(final @NonNull Parser<I,T> that) {
+	public default <T> @NonNull Parser<I,Either<O,T>> alternative(
+		final @NonNull Parser<I,T> that
+	) {
 		return word -> Stream.concat(
 				this.apply(word).map(Tuple.left(Either::first)),
 				that.apply(word).map(Tuple.left(Either::second))
@@ -91,7 +99,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @see #choice(Parser) for binary operation
 	 */
 	@SafeVarargs
-	public static <I,O> @NonNull Parser<I,O> choice(final @NonNull Parser<I, O>... parsers) {
+	public static <I,O> @NonNull Parser<I,O> choice(
+		final @NonNull Parser<I, O>... parsers
+	) {
 		return Stream.of(parsers).reduce(Parser.empty(), (a,b) -> a.choice(b));
 	}
 
@@ -101,9 +111,10 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @param function the binary function that is used to combine the results
 	 * @return a {@link Parser} with combined output
 	 */
-	public default <T,R> Parser<I,R> concat(
-			final @NonNull Parser<I,T> that, 
-			final @NonNull BiFunction<? super O, ? super T, R> function) {
+	public default <T,R> @NonNull Parser<I,R> concat(
+		final @NonNull Parser<I,T> that, 
+		final @NonNull BiFunction<? super O, ? super T, R> function
+	) {
 		return word -> this.apply(word)
 				.map(a -> that.apply(a.target)
 						.map(Tuple.left(s -> function.apply(a.source, s))))
@@ -115,7 +126,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @param that second {@link Parser}
 	 * @return a {@link Parser} with {@link Tuple}ed output
 	 */
-	public default <T> @NonNull Parser<I, Tuple<O,T>> concat(final @NonNull Parser<I,T> that) {
+	public default <T> @NonNull Parser<I, Tuple<O,T>> concat(
+		final @NonNull Parser<I,T> that
+	) {
 		return this.concat(that, Tuple::of);
 	}
 
@@ -124,7 +137,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @param function that is applied to every single result
 	 * @return a {@code Parser} with mapped output
 	 */
-	public default <T> @NonNull Parser<I,T> map(final @NonNull Function<? super O, T> function) {
+	public default <T> @NonNull Parser<I,T> map(
+		final @NonNull Function<? super O, T> function
+	) {
 		return word -> this.apply(word).map(Tuple.left(function));
 	}
 
@@ -133,7 +148,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @param predicate {@code BiPredicate} to filter the result set
 	 * @return a {@code Parser<I,O>} with filtered output
 	 */
-	public default @NonNull Parser<I,O> filter(final @NonNull Predicate<? super Tuple<O, List<I>>> predicate) {
+	public default @NonNull Parser<I,O> filter(
+		final @NonNull Predicate<? super Tuple<O, List<I>>> predicate
+	) {
 		return word -> this.apply(word).filter(predicate);
 	}
 
@@ -154,7 +171,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @return an elementary {@code Parser} that is satisfied by {@link Class}
 	 * @see #satisfy(Predicate)
 	 */
-	public static <IO> @NonNull Parser<IO,IO> satisfy(final @NonNull Class<? super IO> clazz) {
+	public static <IO> @NonNull Parser<IO,IO> satisfy(
+		final @NonNull Class<? super IO> clazz
+	) {
 		return Parser.satisfy(clazz::isInstance);
 	}
 
@@ -163,7 +182,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @return an elementary {@code Parser} that is satisfied by equality
 	 * @see #satisfy(Predicate)
 	 */
-	public static <IO> @NonNull Parser<IO,IO> satisfy(final @Nullable IO prototype) {
+	public static <IO> @NonNull Parser<IO,IO> satisfy(
+		final @Nullable IO prototype
+	) {
 		return Parser.satisfy(current -> Objects.equals(current, prototype));
 	}
 
@@ -174,12 +195,14 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @return a {@code Parser} that aggregates results of parsers in a sequence or {@link #epsilon()} when empty.
 	 */
 	@SafeVarargs
-	public static <I,O> @NonNull Parser<I,Stream<O>> sequence(final @NonNull Parser<I,O>... parsers) {
+	public static <I,O> @NonNull Parser<I,Stream<O>> sequence(
+		final @NonNull Parser<I,O>... parsers
+	) {
 		return Stream.of(parsers).parallel().<Parser<I,Stream<O>>>reduce(
-				Parser.epsilon(),
-				(a,b) -> a.concat(b.<Stream<O>>map(Stream::of), Stream::concat),
-				(a,b) -> a.concat(b, Stream::concat)
-				);
+			Parser.epsilon(),
+			(a,b) -> a.concat(b.<Stream<O>>map(Stream::of), Stream::concat),
+			(a,b) -> a.concat(b, Stream::concat)
+		);
 	}
 
 	/**
@@ -187,7 +210,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @param that sequential parser to be appended
 	 * @return a sequential {@link Parser}
 	 */
-	public default @NonNull Parser<I,Stream<O>> prepend(final @NonNull Parser<I,Stream<O>> that) {
+	public default @NonNull Parser<I,Stream<O>> prepend(
+		final @NonNull Parser<I,Stream<O>> that
+	) {
 		return this.concat(that, (l,r) -> Stream.concat(Stream.of(l), r));
 	}
 
@@ -196,7 +221,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @return a recursive star {@code Parser}
 	 */
 	public default @NonNull Parser<I, Stream<O>> any() {
-		return Parser.recursive( self -> this.prepend(self).choice(Parser.epsilon()) );
+		return Parser.recursive( 
+			self -> this.prepend(self).choice(Parser.epsilon())
+		);
 	}
 
 	/**
@@ -220,7 +247,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @return a {@link Parser} that ignoring the right output but consuming the input
 	 * @see #left(Parser)
 	 */
-	public default <T> @NonNull Parser<I,O> left(final @NonNull Parser<I,T> that) {
+	public default <T> @NonNull Parser<I,O> left(
+		final @NonNull Parser<I,T> that
+	) {
 		return this.concat(that, (l,r) -> l);
 	}
 
@@ -229,7 +258,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @return a {@link Parser} that ignoring the left output but consuming the input
 	 * @see #left(Parser)
 	 */
-	public default <T> @NonNull Parser<I,T> right(final @NonNull Parser<I,T> that) {
+	public default <T> @NonNull Parser<I,T> right(
+		final @NonNull Parser<I,T> that
+	) {
 		return this.concat(that, (l,r) -> r);
 	}
 
@@ -276,7 +307,9 @@ public interface Parser<I,O> extends Function<List<I>, Stream<Tuple<O,List<I>>>>
 	 * @param recursive function that is applied
 	 * @return a recursive {@link Parser}
 	 */
-	public static <I,O> @NonNull Parser<I,O> recursive(final @NonNull Function<Parser<I,O>,Parser<I,O>> recursive) {
+	public static <I,O> @NonNull Parser<I,O> recursive(
+		final @NonNull Function<Parser<I,O>,Parser<I,O>> recursive
+	) {
 		return ((RecursiveFunction<Parser<I,O>>) f -> f.apply(f))
 				.apply(f -> recursive.apply(x -> f.apply(f).apply(x)));
 	}
