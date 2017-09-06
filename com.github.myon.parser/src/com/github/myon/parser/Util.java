@@ -17,7 +17,7 @@ public class Util {
 		return result;
 	}
 
-	static List<Character> string(final String str) {
+	public static List<Character> string(final String str) {
 		final List<Character> result = new ArrayList<>();
 		for(int i=0;i<str.length();i++) {
 			result.add(str.charAt(i));
